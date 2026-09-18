@@ -1,8 +1,8 @@
-{
-  // ...
-  "vars": {
-    "FIREBASE_CLIENT_EMAIL": "firebase-adminsdk-fbsvc@lphs-attendance.iam.gserviceaccount.com",
-    "FIREBASE_PRIVATE_KEY": "-----BEGIN PRIVATE KEY-----\\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDP4hpooW9k0ypZ\\nkWDClxDUKQ4herQnZQvWltlotCrIqqr8NDUJp5NLApQwTH2kvDwfBXhL/Mj7nt+W\\nt3v8gmKMaGfxfaGHw7UqcZeRUZ0mOHOUECOz1tj8Lb5ag6h5ZretjXzzPLlVic7U\\naJqKhrfQxceJHhNLZIVQ3JezQjMTwCoUmZ+KaqMKVkjnoQ5OFcRtehT6HJ44JxTp\\nuzfyzRElBChv9PEqCPrJ1S7Mza6Pou078+4C0MM99SQBjIF9YnNnEiMenxZiFyBf\\nKE3Hu4X7By6qpizwC6i4DXvKz1Hj6XQNgVPixvWiYJqgg147TcI4k42/nr0r699f\\nOi3aVN0JAgMBAAECggEAAR2Qe2E/t3Bz+LkRUNn+ACAcRaJilxeGtxG7fEFYksJq\\nWndulW0DGv2aN/bLxyIvcbyAxxTwgHvQwqlHZAp7EY/PMaTf71o7KE17EmTit/1z\\njqbWL4qGmDZ9Sqphhrfot74GSUkudr605RTj8hGuU34hh6MpWAKOaJRWcrgh4rLn\\nIBf8iAj9YCE9pr5Z1OhYmfJwS58ipJDhr1JZzY/sE4VTblONOag19yAv2hNPpcTB\\nmDnD5w1IqCQvBa6ZOHoc2k8eRU8VSTuazAV0FTU3HgQHZuVPRONk0to1gQYJdsNQ\\nAiQuW+YWiaNQ2dvqlo2pfd0tXePzGzZk8BI9cqTaAQKBgQD7Z6UsuWAVm3SEyqdR\\nU/JtzaRRUdlv18/92qscjUSyuuvjcnF/tsNZGR/RQg3ScUaKeAIdhMM0KhZnmwYQ\\n2EAxYCoxlyqECAAehpuKHmUmp1x97tUHEGhmx+g2flxTMgogIgYDDJeUUeRuUmqF\\nIowAz0sqb2kxrmwR9uT6VK/qyQKBgQDTrtCQ49TeopqVxxMKcC5fY6CwcZgpA0O8\\n4t+6Zfm1comfwNzS2GJMB/P8iDRK9BZ6zSVoCqgZUtVlYq0Xx1kZrpnfQwMP0RHj\\nyVKxtX7mzV9n/gdh6GBAi6m+NrOr2lDQUEmxWtWF6Xa4rKiotZJnu0xYWDqkm7WP\\n63qtazhAQQKBgGtNfY5tQLl4NG9JH8jyj5KWJwAeczPtZPTwlAAHu76dUXkuq4rb\\nMt2gf5gNHWEov/bx6dU3iSmGnTFzVU9zPVLVvKyV3Kulzoc45MI63ul0nWGSwpHV\\nSvozcMVxgW5w+Sll3DMI+NlxapI70wMoD6F42JgwHTH7RF0Wh/zgkIUhAoGAJ8sV\\nKieqPLAUn1NtIOk1znjMHF8+W3dhpICBzmidKJ7/gCihWoGS+PgFxdNVAUIhd7RY\\n89YNA7WuqACEyZOQDGPmSTIvwSlsU4XlJcMYuAqjhMkcWit07K1Um41s+UFxL7fo\\nIo8Q1Luutci/a/e2LgnnsDPl0kvzNbrutOsTCAECgYEAnq6IfV/pJNXV+r+W19er\\neFkxPkKb3GR9AGzBw7ZCSjUtwfKSFLn7+sz4ymr1IQPb7TBbscXsUr7k4PrYvfq8\\nFDEgyYRzYnonEHujZqSwJXxWfrBaAynbqk/lUn3Tv3z20uSq4Ijdt2xtATeMLHm6\\niA/tdlAmd0TsumLunKaOj90=\\n-----END PRIVATE KEY-----\\n"
-  },
-  // ...
-}
+name = "libon-private-high-school-dis-app"
+compatibility_date = "2026-09-18"
+
+[build]
+command = "npm run build"
+
+[site]
+bucket = "./dist"
