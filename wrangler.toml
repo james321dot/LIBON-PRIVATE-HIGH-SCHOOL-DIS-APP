@@ -1,8 +1,2 @@
 name = "libon-private-high-school-dis-app"
-compatibility_date = "2026-09-18"
-
-[build]
-command = "npm run build"
-
-[site]
-bucket = "./dist"
+pages_build_output_dir = "./dist"
