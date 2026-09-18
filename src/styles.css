@@ -1,0 +1,153 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * LPHS Design System — Emerald & Ivory
+ * Institutional green/white identity for Libon Private High School.
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  /* Brand extensions */
+  --color-forest: var(--forest);
+  --color-forest-deep: var(--forest-deep);
+  --color-emerald: var(--emerald);
+  --color-leaf: var(--leaf);
+  --color-mint: var(--mint);
+  --color-gold: var(--gold);
+  --color-canvas: var(--canvas);
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: oklch(0.99 0.005 150);
+  --foreground: oklch(0.28 0.05 160);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.28 0.05 160);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.28 0.05 160);
+  --primary: oklch(0.34 0.062 158);            /* forest #1b4332 */
+  --primary-foreground: oklch(0.985 0.005 150);
+  --secondary: oklch(0.945 0.04 152);          /* light mint */
+  --secondary-foreground: oklch(0.34 0.062 158);
+  --muted: oklch(0.965 0.012 155);
+  --muted-foreground: oklch(0.55 0.03 200);
+  --accent: oklch(0.70 0.115 156);             /* leaf #52b788 */
+  --accent-foreground: oklch(0.22 0.045 160);
+  --destructive: oklch(0.586 0.222 13);        /* #e11d48 */
+  --destructive-foreground: oklch(0.985 0.005 150);
+  --border: oklch(0.92 0.015 155);
+  --input: oklch(0.92 0.015 155);
+  --ring: oklch(0.70 0.115 156);
+
+  --forest: oklch(0.34 0.062 158);
+  --forest-deep: oklch(0.215 0.04 165);        /* #081c15 */
+  --emerald: oklch(0.475 0.085 159);           /* #2d6a4f */
+  --leaf: oklch(0.70 0.115 156);               /* #52b788 */
+  --mint: oklch(0.945 0.04 152);               /* #d8f3dc */
+  --gold: oklch(0.83 0.155 85);                /* #fbbf24 */
+  --canvas: oklch(0.965 0.012 155);            /* admin bg */
+
+  --gradient-hero: linear-gradient(180deg, var(--forest) 0%, var(--forest-deep) 100%);
+  --gradient-leaf: linear-gradient(135deg, var(--emerald), var(--leaf));
+  --shadow-card: 0 25px 60px -15px oklch(0.2 0.05 165 / 0.45);
+  --shadow-soft: 0 8px 30px -8px oklch(0.3 0.05 160 / 0.12);
+  --shadow-glow: 0 0 40px oklch(0.70 0.115 156 / 0.25);
+}
+
+.dark {
+  --background: oklch(0.215 0.04 165);
+  --foreground: oklch(0.97 0.01 150);
+  --card: oklch(0.27 0.05 160);
+  --card-foreground: oklch(0.97 0.01 150);
+  --popover: oklch(0.27 0.05 160);
+  --popover-foreground: oklch(0.97 0.01 150);
+  --primary: oklch(0.70 0.115 156);
+  --primary-foreground: oklch(0.215 0.04 165);
+  --secondary: oklch(0.30 0.05 160);
+  --secondary-foreground: oklch(0.97 0.01 150);
+  --muted: oklch(0.30 0.05 160);
+  --muted-foreground: oklch(0.72 0.03 160);
+  --accent: oklch(0.70 0.115 156);
+  --accent-foreground: oklch(0.215 0.04 165);
+  --destructive: oklch(0.65 0.2 15);
+  --destructive-foreground: oklch(0.97 0.01 150);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.70 0.115 156);
+}
+
+@utility bg-hero-gradient {
+  background: var(--gradient-hero);
+}
+
+@utility bg-leaf-gradient {
+  background: var(--gradient-leaf);
+}
+
+@utility shadow-card-lux {
+  box-shadow: var(--shadow-card);
+}
+
+@utility shadow-soft {
+  box-shadow: var(--shadow-soft);
+}
+
+@utility shadow-glow {
+  box-shadow: var(--shadow-glow);
+}
+
+@utility glass-panel {
+  background: oklch(1 0 0 / 5%);
+  border: 1px solid oklch(1 0 0 / 12%);
+  backdrop-filter: blur(12px);
+}
+
+@utility text-balance {
+  text-wrap: balance;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    font-family: var(--font-sans);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    -webkit-font-smoothing: antialiased;
+  }
+}

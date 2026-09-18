@@ -1,0 +1,11 @@
+{
+  "database": {
+    "rules": "database.rules.json"
+  },
+  "hosting": {
+    "source": ".",
+    "frameworksBackend": {
+      "region": "asia-east1"
+    }
+  }
+}

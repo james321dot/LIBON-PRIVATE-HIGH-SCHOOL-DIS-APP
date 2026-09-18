@@ -1,0 +1,114 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "attendance": {
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.token.claims.role === 'Guard' || auth.token.claims.role === 'Admin' || auth.token.claims.role === 'Dev')",
+      ".indexOn": ["timestamp", "status"],
+      "$entryId": {
+        ".validate": "newData.hasChildren(['name', 'role', 'time', 'status', 'timestamp'])",
+        "name": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 120"
+        },
+        "role": {
+          ".validate": "newData.isString() && newData.val().length <= 60"
+        },
+        "time": {
+          ".validate": "newData.isString() && newData.val().length <= 20"
+        },
+        "status": {
+          ".validate": "newData.val() === 'Late' || newData.val() === 'On-Time'"
+        },
+        "timestamp": {
+          ".validate": "newData.isNumber()"
+        },
+        "studentId": {
+          ".validate": "newData.isString() && newData.val().length <= 60"
+        },
+        "guard": {
+          ".validate": "newData.isString() && newData.val().length <= 120"
+        },
+        "gradeLevel": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "section": {
+          ".validate": "newData.isString() && newData.val().length <= 60"
+        },
+        "source": {
+          ".validate": "newData.val() === 'qr' || newData.val() === 'manual'"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+
+    "roster": {
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.token.claims.role === 'Admin' || auth.token.claims.role === 'Dev')",
+      ".validate": "newData.exists() && newData.val() !== null",
+      "$index": {
+        ".validate": "newData.hasChildren(['id', 'name', 'role'])",
+        "id": {
+          ".validate": "newData.isString() && newData.val().length <= 60"
+        },
+        "name": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 120"
+        },
+        "role": {
+          ".validate": "newData.isString() && newData.val().length <= 60"
+        },
+        "gradeLevel": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "section": {
+          ".validate": "newData.isString() && newData.val().length <= 60"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+
+    "scanEvents": {
+      ".read": "auth != null",
+      ".write": "auth != null && (auth.token.claims.role === 'Guard' || auth.token.claims.role === 'Admin' || auth.token.claims.role === 'Dev')",
+      ".indexOn": ["timestamp"],
+      "$eventId": {
+        ".validate": "newData.hasChildren(['timestamp', 'name', 'result'])",
+        "timestamp": {
+          ".validate": "newData.isNumber()"
+        },
+        "time": {
+          ".validate": "newData.isString() && newData.val().length <= 20"
+        },
+        "name": {
+          ".validate": "newData.isString() && newData.val().length <= 120"
+        },
+        "detail": {
+          ".validate": "newData.isString() && newData.val().length <= 240"
+        },
+        "result": {
+          ".validate": "newData.val() === 'logged' || newData.val() === 'duplicate' || newData.val() === 'unreadable' || newData.val() === 'failed'"
+        },
+        "late": {
+          ".validate": "newData.isBoolean()"
+        },
+        "station": {
+          ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "source": {
+          ".validate": "newData.val() === 'camera' || newData.val() === 'manual'"
+        },
+        "studentId": {
+          ".validate": "newData.isString() && newData.val().length <= 60"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    }
+  }
+}
