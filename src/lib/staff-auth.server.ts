@@ -135,7 +135,20 @@ async function mintCustomToken(
       new TextEncoder().encode(signingInput),
     );
     return `${signingInput}.${base64Url(new Uint8Array(signature))}`;
-  } catch {
+  } catch (error) {
+    // Diagnose without leaking the key: report only the *shape* of what we got.
+    // A well-formed service-account key must contain the PEM markers and be
+    // readable as base64 PKCS#8. Anything else means the paste went wrong.
+    console.error("mintCustomToken failed", {
+      reason: error instanceof Error ? error.message : String(error),
+      clientEmailDomain: clientEmail.slice(clientEmail.indexOf("@") + 1),
+      keyLength: privateKeyRaw.length,
+      hasBeginMarker: privateKeyRaw.includes("BEGIN PRIVATE KEY"),
+      hasEndMarker: privateKeyRaw.includes("END PRIVATE KEY"),
+      hasLiteralBackslashN: privateKeyRaw.includes("\\n"),
+      hasRealNewline: privateKeyRaw.includes("\n"),
+      startsWithMarker: privateKeyRaw.startsWith("-----BEGIN"),
+    });
     return null;
   }
 }
@@ -175,7 +188,10 @@ export const staffSignInFn = createServerFn({ method: "POST" })
     // Distinguish "nothing is configured yet" from "wrong password" so setup
     // problems are obvious instead of looking like a bad credential.
     const anyConfigured = staffTable().some((entry) => requiredSecret(entry.envKey) !== null);
-    return { ok: false as const, reason: anyConfigured ? undefined : ("no-passwords-set" as const) };
+    return {
+      ok: false as const,
+      reason: anyConfigured ? undefined : ("no-passwords-set" as const),
+    };
   });
 
 /**
@@ -195,4 +211,3 @@ export const adminSignInFn = createServerFn({ method: "POST" })
     if (!token) return { ok: false as const, reason: "auth-not-configured" as const };
     return { ok: true as const, token };
   });
-

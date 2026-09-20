@@ -46,6 +46,7 @@ import {
   subscribeScanEvents,
   signInWithStaffToken,
   signOutStaff,
+  waitForSignedInUser,
   type ScanEvent,
 } from "@/lib/firebase-client";
 
@@ -114,27 +115,38 @@ function AttendancePage() {
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
     let cancelled = false;
-    subscribeAttendance((list) => {
-      if (!cancelled) setEntries(list);
-    })
+    // Wait for a real Firebase session first: the database rules reject
+    // anonymous reads, so subscribing on mount would always fail and falsely
+    // report the database as unreachable to someone who is simply not signed in.
+    waitForSignedInUser()
+      .then(() =>
+        subscribeAttendance((list) => {
+          if (!cancelled) setEntries(list);
+        }),
+      )
       .then((unsub) => {
         if (cancelled) unsub();
         else unsubscribe = unsub;
       })
+      // Only a signed-in user whose read still fails reaches here, so this
+      // toast now means a genuine database problem rather than "not logged in".
       .catch(() => notify("System Error", "Database Unreachable", "âŒ"));
     return () => {
       cancelled = true;
       unsubscribe?.();
     };
-  }, [notify]);
+  }, [guard, notify]);
 
   // Live scanner feed â€” every scan from every station, viewable on any admin device.
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
     let cancelled = false;
-    subscribeScanEvents((list) => {
-      if (!cancelled) setScanEvents(list);
-    })
+    waitForSignedInUser()
+      .then(() =>
+        subscribeScanEvents((list) => {
+          if (!cancelled) setScanEvents(list);
+        }),
+      )
       .then((unsub) => {
         if (cancelled) unsub();
         else unsubscribe = unsub;
@@ -144,23 +156,26 @@ function AttendancePage() {
       cancelled = true;
       unsubscribe?.();
     };
-  }, []);
+  }, [guard]);
 
   // Shared roster sync â€” every tablet and admin device sees the same list.
   useEffect(() => {
     let unsub: (() => void) | undefined;
     let cancelled = false;
     let hydrated = false;
-    subscribeRoster((list) => {
-      if (cancelled) return;
-      hydrated = true;
-      const local = loadRoster();
-      if (list.length === 0 && local.length > 0) {
-        void publishRoster(local);
-        return;
-      }
-      if (JSON.stringify(list) !== JSON.stringify(local)) saveRosterLocalOnly(list);
-    })
+    waitForSignedInUser()
+      .then(() =>
+        subscribeRoster((list) => {
+          if (cancelled) return;
+          hydrated = true;
+          const local = loadRoster();
+          if (list.length === 0 && local.length > 0) {
+            void publishRoster(local);
+            return;
+          }
+          if (JSON.stringify(list) !== JSON.stringify(local)) saveRosterLocalOnly(list);
+        }),
+      )
       .then((u) => {
         if (cancelled) u();
         else unsub = u;
@@ -176,7 +191,7 @@ function AttendancePage() {
       unsub?.();
       window.removeEventListener("lphs-roster-change", onLocalChange);
     };
-  }, []);
+  }, [guard]);
 
   const handleDevClick = () => {
     devClicks.current++;

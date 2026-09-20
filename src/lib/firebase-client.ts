@@ -45,6 +45,47 @@ export async function signOutStaff(): Promise<void> {
 }
 
 /**
+ * Resolves once a signed-in Firebase user exists, or rejects after `timeoutMs`.
+ *
+ * The database is unreadable until a staff password has been exchanged for a
+ * real session, so callers must not subscribe on mount — they would always race
+ * ahead of login and report a spurious failure. Awaiting this instead makes the
+ * subscription start at the moment the session becomes usable.
+ */
+export async function waitForSignedInUser(timeoutMs = 15000): Promise<string> {
+  const app = await getApp();
+  const { getAuth, onAuthStateChanged } = await import("firebase/auth");
+  const auth = getAuth(app as Parameters<typeof getAuth>[0]);
+  if (auth.currentUser) return auth.currentUser.uid;
+
+  return new Promise<string>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      unsubscribe();
+      reject(new Error("auth-timeout"));
+    }, timeoutMs);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) return;
+      clearTimeout(timer);
+      unsubscribe();
+      resolve(user.uid);
+    });
+  });
+}
+
+/**
+ * Fires whenever the signed-in user appears or disappears, so long-lived
+ * subscriptions can start on login and tear down on sign-out.
+ */
+export async function subscribeToAuthState(
+  callback: (uid: string | null) => void,
+): Promise<() => void> {
+  const app = await getApp();
+  const { getAuth, onAuthStateChanged } = await import("firebase/auth");
+  const auth = getAuth(app as Parameters<typeof getAuth>[0]);
+  return onAuthStateChanged(auth, (user) => callback(user?.uid ?? null));
+}
+
+/**
  * Only touches the database once a signed-in user exists. The rules reject
  * unauthenticated reads/writes, so there is no anonymous fallback.
  */

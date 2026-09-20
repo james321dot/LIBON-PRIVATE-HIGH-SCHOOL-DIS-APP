@@ -1,2 +1,4 @@
+# Cloudflare Worker deployment (not Pages).
+# Nitro generates main, compatibility settings, and the ASSETS binding in
+# .output/server/wrangler.json. Deploy that generated config with npm run deploy.
 name = "libon-private-high-school-dis-app"
-pages_build_output_dir = "./dist"

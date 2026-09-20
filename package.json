@@ -8,6 +8,8 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
+    "deploy": "vite build && wrangler deploy --config .output/server/wrangler.json",
+    "cf-typegen": "wrangler types",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
@@ -90,6 +92,7 @@
     "prettier": "^3.7.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
-    "vite": "^8.0.16"
+    "vite": "^8.0.16",
+    "wrangler": "^4.135.0"
   }
 }
