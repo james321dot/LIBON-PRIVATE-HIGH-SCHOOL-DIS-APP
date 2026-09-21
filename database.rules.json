@@ -5,7 +5,7 @@
 
     "attendance": {
       ".read": "auth != null",
-      ".write": "auth != null && (auth.token.claims.role === 'Guard' || auth.token.claims.role === 'Admin' || auth.token.claims.role === 'Dev')",
+      ".write": "auth != null && (auth.token.role === 'Guard' || auth.token.role === 'Admin' || auth.token.role === 'Dev')",
       ".indexOn": ["timestamp", "status"],
       "$entryId": {
         ".validate": "newData.hasChildren(['name', 'role', 'time', 'status', 'timestamp'])",
@@ -47,7 +47,7 @@
 
     "roster": {
       ".read": "auth != null",
-      ".write": "auth != null && (auth.token.role === 'Guard' || auth.token.role === 'Admin' || auth.token.role === 'Dev')",
+      ".write": "auth != null && (auth.token.role === 'Admin' || auth.token.role === 'Dev')",
       ".validate": "newData.exists() && newData.val() !== null",
       "$index": {
         ".validate": "newData.hasChildren(['id', 'name', 'role'])",
@@ -74,7 +74,7 @@
 
     "scanEvents": {
       ".read": "auth != null",
-      ".write": "auth != null && (auth.token.claims.role === 'Guard' || auth.token.claims.role === 'Admin' || auth.token.claims.role === 'Dev')",
+      ".write": "auth != null && (auth.token.role === 'Guard' || auth.token.role === 'Admin' || auth.token.role === 'Dev')",
       ".indexOn": ["timestamp"],
       "$eventId": {
         ".validate": "newData.hasChildren(['timestamp', 'name', 'result'])",
