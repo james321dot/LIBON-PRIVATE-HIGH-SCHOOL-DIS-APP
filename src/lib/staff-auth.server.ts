@@ -1,5 +1,3 @@
-import { createServerFn } from "@tanstack/react-start";
-
 /**
  * Server-only authentication.
  *
@@ -18,6 +16,8 @@ import { createServerFn } from "@tanstack/react-start";
  * A custom token is just a JWT signed RS256 with the service-account key, which
  * WebCrypto can do natively.
  */
+import { createServerFn } from "@tanstack/react-start";
+
 export type StaffRole = "Guard" | "Admin" | "EClub" | "Dev";
 
 export interface StaffAccount {

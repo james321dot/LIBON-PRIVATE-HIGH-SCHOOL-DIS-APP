@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppHeader } from "@/components/AppHeader";
 import { ClientView } from "@/components/ClientView";
@@ -46,7 +46,7 @@ import {
   subscribeScanEvents,
   signInWithStaffToken,
   signOutStaff,
-  waitForSignedInUser,
+  currentOrPendingUid,
   type ScanEvent,
 } from "@/lib/firebase-client";
 
@@ -57,7 +57,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Guard-verified attendance portal for Libon Private High School â€” real-time gate logging, roster verification and secure admin analytics.",
+          "Guard-verified attendance portal for Libon Private High School — real-time gate logging, roster verification and secure admin analytics.",
       },
       { property: "og:title", content: "LPHS Digital Attendance System" },
       {
@@ -96,7 +96,7 @@ function AttendancePage() {
   const entriesRef = useRef<AttendanceEntry[]>([]);
   entriesRef.current = entries;
 
-  const notify = useCallback((title: string, message: string, icon = "ðŸŸ¢") => {
+  const notify = useCallback((title: string, message: string, icon = "🟢") => {
     const id = ++toastId.current;
     setToasts((prev) => [...prev, { id, title, message, icon }]);
     setTimeout(() => {
@@ -115,75 +115,115 @@ function AttendancePage() {
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
     let cancelled = false;
-    // Wait for a real Firebase session first: the database rules reject
-    // anonymous reads, so subscribing on mount would always fail and falsely
-    // report the database as unreachable to someone who is simply not signed in.
-    waitForSignedInUser()
-      .then(() =>
-        subscribeAttendance((list) => {
-          if (!cancelled) setEntries(list);
-        }),
-      )
-      .then((unsub) => {
+    // Wait for a Firebase session first: the database rules reject anonymous
+    // reads, so subscribing while signed out would always fail and wrongly
+    // report the database as unreachable to someone who simply has not logged in.
+    let reported = false;
+    void (async () => {
+      const uid = await currentOrPendingUid();
+      // Signed out is the normal state for a visitor, not a database failure.
+      if (!uid || cancelled) return;
+      try {
+        const unsub = await subscribeAttendance(
+          (list) => {
+            if (!cancelled) setEntries(list);
+          },
+          (error) => {
+            if (cancelled || reported) return;
+            reported = true;
+            console.error("Attendance subscription failed", error);
+            notify("System Error", "Could not load attendance records");
+          },
+        );
         if (cancelled) unsub();
         else unsubscribe = unsub;
-      })
-      // Only a signed-in user whose read still fails reaches here, so this
-      // toast now means a genuine database problem rather than "not logged in".
-      .catch(() => notify("System Error", "Database Unreachable", "âŒ"));
+      } catch (error) {
+        if (cancelled || reported) return;
+        reported = true;
+        console.error("Attendance subscribe setup failed", error);
+        notify("System Error", "Could not load attendance records");
+      }
+    })();
     return () => {
       cancelled = true;
       unsubscribe?.();
     };
-  }, [guard, notify]);
+  }, [notify]);
 
-  // Live scanner feed â€” every scan from every station, viewable on any admin device.
+  // Live scanner feed — every scan from every station, viewable on any admin device.
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
     let cancelled = false;
-    waitForSignedInUser()
-      .then(() =>
-        subscribeScanEvents((list) => {
-          if (!cancelled) setScanEvents(list);
-        }),
-      )
-      .then((unsub) => {
+
+    void (async () => {
+      const uid = await currentOrPendingUid();
+      if (!uid || cancelled) return;
+      try {
+        const unsub = await subscribeScanEvents(
+          (list) => {
+            if (!cancelled) setScanEvents(list);
+          },
+          (error) => console.error("Scan event subscription failed", error),
+        );
         if (cancelled) unsub();
         else unsubscribe = unsub;
-      })
-      .catch(() => undefined);
+      } catch (error) {
+        console.error("Scan event subscribe setup failed", error);
+      }
+    })();
+
     return () => {
       cancelled = true;
       unsubscribe?.();
     };
-  }, [guard]);
+  }, []);
 
-  // Shared roster sync â€” every tablet and admin device sees the same list.
+  // Shared roster sync — every tablet and admin device sees the same list.
   useEffect(() => {
     let unsub: (() => void) | undefined;
     let cancelled = false;
     let hydrated = false;
-    waitForSignedInUser()
-      .then(() =>
-        subscribeRoster((list) => {
-          if (cancelled) return;
-          hydrated = true;
-          const local = loadRoster();
-          if (list.length === 0 && local.length > 0) {
-            void publishRoster(local);
-            return;
-          }
-          if (JSON.stringify(list) !== JSON.stringify(local)) saveRosterLocalOnly(list);
-        }),
-      )
-      .then((u) => {
+    let signedIn = false;
+    void (async () => {
+      const uid = await currentOrPendingUid();
+      if (!uid || cancelled) return;
+      signedIn = true;
+      try {
+        const u = await subscribeRoster(
+          (list) => {
+            if (cancelled) return;
+            hydrated = true;
+            const local = loadRoster();
+            // Seed the cloud only when the cloud is empty AND this client has
+            // something to contribute. Never push an empty list — that would
+            // erase the shared roster for every other device.
+            if (list.length === 0 && local.length > 0) {
+              void publishRoster(local).catch((error) => {
+                console.error("Roster seed failed", error);
+              });
+              return;
+            }
+            if (JSON.stringify(list) !== JSON.stringify(local)) saveRosterLocalOnly(list);
+          },
+          (error) => console.error("Roster subscription failed", error),
+        );
         if (cancelled) u();
         else unsub = u;
-      })
-      .catch(() => undefined);
+      } catch (error) {
+        console.error("Roster subscribe setup failed", error);
+      }
+    })();
 
     const onLocalChange = () => {
-      if (hydrated) void publishRoster(loadRoster());
+      // Only a signed-in client may write, and only after the initial cloud read
+      // hydrated local state. Without both checks this can echo local edits back
+      // before the first read completes, or push an empty roster and wipe data.
+      if (!signedIn || !hydrated) return;
+      const local = loadRoster();
+      if (local.length === 0) return;
+      void publishRoster(local).catch((error) => {
+        console.error("Roster publish failed", error);
+      });
     };
     window.addEventListener("lphs-roster-change", onLocalChange);
     return () => {
@@ -191,7 +231,7 @@ function AttendancePage() {
       unsub?.();
       window.removeEventListener("lphs-roster-change", onLocalChange);
     };
-  }, [guard]);
+  }, []);
 
   const handleDevClick = () => {
     devClicks.current++;
@@ -206,16 +246,16 @@ function AttendancePage() {
   const handleLoginSuccess = (n: string, account: StaffAccount) => {
     setGuard(startGuardSession(n, account.role, account.badge));
     setLoginOpen(false);
-    notify("Shift Started", `WELCOME ${n.toUpperCase()} Â· ${account.badge}`, "ðŸ›¡ï¸");
+    notify("Shift Started", `WELCOME ${n.toUpperCase()} · ${account.badge}`);
   };
 
   const handleQRUnlock = (account: StaffAccount) => {
     if (!guard) {
-      setGuard(startGuardSession(`QR STATION Â· ${account.badge}`, account.role, account.badge));
+      setGuard(startGuardSession(`QR STATION · ${account.badge}`, account.role, account.badge));
     }
     setQrLockOpen(false);
     setView("qr");
-    notify("QR Mode Active", `SCANNING STATION UNLOCKED Â· ${account.badge}`, "ðŸ”³");
+    notify("QR Mode Active", `SCANNING STATION UNLOCKED · ${account.badge}`);
   };
 
   const handleEndShift = () => {
@@ -233,7 +273,7 @@ function AttendancePage() {
     setShiftReport(null);
     endGuardSession();
     setGuard(null);
-    notify("Shift Ended", "GUARD SIGNED OUT", "ðŸ‘‹");
+    notify("Shift Ended", "GUARD SIGNED OUT");
   };
 
   const toggleKiosk = () => {
@@ -260,25 +300,25 @@ function AttendancePage() {
   ): Promise<boolean> => {
     // The guard must be authenticated through GuardLogin (name + verified staff
     // password). The verified account's badge/role travels with the session, so
-    // recording is authorized by who signed in â€” never by a client-side flag.
+    // recording is authorized by who signed in — never by a client-side flag.
     if (!guard) {
-      notify("Shift Required", "START A GUARD SHIFT FIRST", "ðŸ›¡ï¸");
+      notify("Shift Required", "START A GUARD SHIFT FIRST");
       promptGuardName();
       return false;
     }
     if (!guard.badge || !guard.role) {
-      notify("Unauthorized", "SIGN IN WITH A STAFF PASSWORD", "ðŸš«");
+      notify("Unauthorized", "SIGN IN WITH A STAFF PASSWORD");
       promptGuardName();
       return false;
     }
     if (!name || !role) {
-      notify("Input Error", "NAME AND ROLE ARE REQUIRED", "âŒ");
+      notify("Input Error", "NAME AND ROLE ARE REQUIRED");
       return false;
     }
 
     const existing = entriesRef.current.find((e) => e.name.toUpperCase() === name.toUpperCase());
     if (existing && Date.now() - existing.timestamp < 60000) {
-      notify("Notice", "ENTRY ALREADY RECORDED RECENTLY", "âš ï¸");
+      notify("Notice", "ENTRY ALREADY RECORDED RECENTLY");
       return false;
     }
 
@@ -309,12 +349,13 @@ function AttendancePage() {
         haptic(isLate ? [30, 60, 30] : 40);
         setTimeout(() => {
           setSuccess((s) => ({ ...s, visible: false }));
-          notify("Registry Success", `CONGRATS ${name.toUpperCase()}, LOGGED IN`, "ðŸŽ“");
+          notify("Registry Success", `CONGRATS ${name.toUpperCase()}, LOGGED IN`);
         }, 2000);
       }
       return true;
-    } catch {
-      notify("System Error", "Database Unreachable", "âŒ");
+    } catch (error) {
+      console.error("Failed to save attendance entry", error);
+      notify("System Error", "Could not save the attendance record");
       return false;
     }
   };
@@ -329,18 +370,18 @@ function AttendancePage() {
     if (!id) return;
     try {
       await removeAttendance(id);
-      notify("System Update", "RECORD DELETED", "ðŸ—‘ï¸");
+      notify("System Update", "RECORD DELETED");
     } catch {
-      notify("Error", "Permission Denied", "âŒ");
+      notify("Error", "Permission Denied");
     }
   };
 
   const handleClearScanLog = async () => {
     try {
       await clearScanEvents();
-      notify("Scan Log", "SCANNER HISTORY CLEARED", "ðŸ§¹");
+      notify("Scan Log", "SCANNER HISTORY CLEARED");
     } catch {
-      notify("Error", "Permission Denied", "âŒ");
+      notify("Error", "Permission Denied");
     }
   };
 
@@ -360,7 +401,7 @@ function AttendancePage() {
       if (result.ok) await signInWithStaffToken(result.token);
       ok = result.ok;
     } catch {
-      notify("System Error", "COULD NOT REACH SERVER", "âŒ");
+      notify("System Error", "COULD NOT REACH SERVER");
       return;
     }
     if (ok) {
@@ -368,10 +409,10 @@ function AttendancePage() {
       setLockOpen(false);
       setView("admin");
       setCsvDownloaded(false);
-      notify("System Access", "ADMIN DASHBOARD ACTIVE", "ðŸ›¡ï¸");
+      notify("System Access", "ADMIN DASHBOARD ACTIVE");
     } else {
       const attempts = loginAttempts + 1;
-      notify("Access Denied", "INVALID PASS", "ðŸš«");
+      notify("Access Denied", "INVALID PASS");
       if (attempts >= 3) {
         setLockOpen(false);
         setLoginAttempts(0);
@@ -383,19 +424,19 @@ function AttendancePage() {
 
   const handleExport = () => {
     if (entries.length === 0) {
-      notify("System Info", "NO DATA", "â„¹ï¸");
+      notify("System Info", "NO DATA");
       return;
     }
     exportEntriesToCSV(entries);
     setCsvDownloaded(true);
-    notify("Export Success", "ATTENDANCE DOWNLOADED", "ðŸ’¾");
+    notify("Export Success", "ATTENDANCE DOWNLOADED");
   };
 
   const handleLogout = () => {
     // Drop the Firebase session so the token cannot be reused.
     void signOutStaff();
     setView("client");
-    notify("System Update", "SIGNED OUT", "ðŸ‘‹");
+    notify("System Update", "SIGNED OUT");
   };
 
   return (

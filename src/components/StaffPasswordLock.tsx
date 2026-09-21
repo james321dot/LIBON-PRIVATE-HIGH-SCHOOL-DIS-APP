@@ -115,7 +115,7 @@ export function StaffPasswordLock({
           onClick={() => void verify()}
           className="mt-5 w-full rounded-full bg-leaf-gradient py-3 text-[11px] font-bold uppercase tracking-[0.2em] text-primary-foreground transition-all hover:-translate-y-0.5 hover:shadow-glow active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {checking ? "Verifyingâ€¦" : "Unlock"}
+          {checking ? "Verifying..." : "Unlock"}
         </button>
       </motion.div>
     </div>
