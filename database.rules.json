@@ -47,7 +47,7 @@
 
     "roster": {
       ".read": "auth != null",
-      ".write": "auth != null && (auth.token.claims.role === 'Admin' || auth.token.claims.role === 'Dev')",
+      ".write": "auth != null && (auth.token.role === 'Guard' || auth.token.role === 'Admin' || auth.token.role === 'Dev')",
       ".validate": "newData.exists() && newData.val() !== null",
       "$index": {
         ".validate": "newData.hasChildren(['id', 'name', 'role'])",
