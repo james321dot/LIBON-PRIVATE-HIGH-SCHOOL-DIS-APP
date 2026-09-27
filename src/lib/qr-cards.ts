@@ -64,9 +64,17 @@ const REMINDERS = [
   "Lost or Damaged Card? Report immediately to your Class Adviser or the Electronics Club / Security Personnel for a replacement.",
 ];
 
-/** Card geometry — A4 portrait, 2 columns x 3 rows = 6 cards per page. */
-export const CARD_WIDTH_MM = 97;
+/** Card geometry — A4 portrait, 3 columns x 3 rows = 9 cards per page (62mm x 92mm). */
+export const CARD_WIDTH_MM = 62;
 export const CARD_HEIGHT_MM = 92;
+
+/** Cards per row/column on an A4 sheet, derived from the card geometry. */
+export const CARDS_PER_ROW = 3;
+export const CARDS_PER_COLUMN = 3;
+export const CARDS_PER_PAGE = CARDS_PER_ROW * CARDS_PER_COLUMN;
+/** Horizontal / vertical gap between cards on a sheet (mm). */
+export const CARD_GAP_X_MM = 3;
+export const CARD_GAP_Y_MM = 2;
 
 /** Shared stylesheet for the official LPHS card (locked design). */
 const CARD_CSS = `
@@ -86,30 +94,30 @@ const CARD_CSS = `
   .bg.bl { bottom: 5mm; left: -15mm; width: 25mm; height: 16mm; background: #166534; transform: rotate(28deg); }
   .bg.br { bottom: 4mm; right: -13mm; width: 24mm; height: 18mm; background: #14532d; transform: rotate(-30deg); }
   .inner {
-    position: relative; z-index: 1; flex: 1; margin: 2.6mm 2.6mm 0; background: #fff;
+    position: relative; z-index: 1; flex: 1; margin: 2.2mm 2.2mm 0; background: #fff;
     border-radius: 1.6mm; text-align: center; display: flex; flex-direction: column;
-    align-items: center; padding: 2mm 3mm 1.4mm; min-height: 0;
+    align-items: center; padding: 1.8mm 2.2mm 1.2mm; min-height: 0;
   }
-  .seal { height: 10mm; }
-  .card h1 { font-size: 10.5pt; font-weight: 900; margin: 0.8mm 0 0; line-height: .98; letter-spacing: -.3px; color: #14532d; }
-  .card h2 { font-size: 6pt; font-weight: 800; margin: 0.7mm 0 0; letter-spacing: .2px; color: #166534; }
-  .card h3 { font-size: 5.4pt; font-weight: 900; margin: 1.4mm 0 0.8mm; letter-spacing: .2px; color: #14532d; }
-  .qr-frame { border: .5mm solid #14532d; border-radius: 2mm; padding: 1.2mm; background: #fff; }
-  .qr { width: 27mm; height: 27mm; display: block; image-rendering: pixelated; }
-  .pname { font-family: Georgia, 'Times New Roman', serif; font-size: 14pt; font-weight: 700; margin: 0.9mm 0 0; line-height: 1.02; color: #14532d; }
-  .pclass { font-family: Georgia, 'Times New Roman', serif; font-size: 6.4pt; margin: 0.8mm 0 0; letter-spacing: .4px; color: #14532d; }
-  .sign { margin-top: auto; padding-top: 1.6mm; }
-  .sign span { display: block; width: 26mm; height: .3mm; background: #14532d; margin: 0 auto .6mm; }
-  .sign small { font-family: Georgia, 'Times New Roman', serif; font-size: 5.4pt; letter-spacing: .4px; color: #14532d; }
-  .pid { font-size: 4pt; letter-spacing: 1px; color: #6b8578; margin: 0.6mm 0 0; font-family: Arial, sans-serif; }
+  .seal { height: 9mm; }
+  .card h1 { font-size: 8pt; font-weight: 900; margin: 0.7mm 0 0; line-height: .98; letter-spacing: -.3px; color: #14532d; }
+  .card h2 { font-size: 5pt; font-weight: 800; margin: 0.6mm 0 0; letter-spacing: .2px; color: #166534; }
+  .card h3 { font-size: 4.4pt; font-weight: 900; margin: 1.1mm 0 0.7mm; letter-spacing: .2px; color: #14532d; }
+  .qr-frame { border: .5mm solid #14532d; border-radius: 2mm; padding: 1mm; background: #fff; }
+  .qr { width: 24mm; height: 24mm; display: block; image-rendering: pixelated; }
+  .pname { font-family: Georgia, 'Times New Roman', serif; font-size: 11pt; font-weight: 700; margin: 0.8mm 0 0; line-height: 1.02; color: #14532d; }
+  .pclass { font-family: Georgia, 'Times New Roman', serif; font-size: 5.6pt; margin: 0.7mm 0 0; letter-spacing: .4px; color: #14532d; }
+  .sign { margin-top: auto; padding-top: 1.3mm; }
+  .sign span { display: block; width: 22mm; height: .3mm; background: #14532d; margin: 0 auto .6mm; }
+  .sign small { font-family: Georgia, 'Times New Roman', serif; font-size: 4.8pt; letter-spacing: .4px; color: #14532d; }
+  .pid { font-size: 3.6pt; letter-spacing: 1px; color: #6b8578; margin: 0.6mm 0 0; font-family: Arial, sans-serif; }
   .reminders {
-    position: relative; z-index: 1; margin: 1.4mm 0 0; padding: 1.2mm 3mm 1.6mm 4.4mm;
+    position: relative; z-index: 1; margin: 1.2mm 0 0; padding: 1mm 2.2mm 1.4mm 3.4mm;
     background: #fff; list-style: none;
-    column-count: 2; column-gap: 3mm;
+    column-count: 1; column-gap: 3mm;
   }
   .reminders li {
-    font-family: Arial, Helvetica, sans-serif; font-size: 3.5pt; line-height: 1.4;
-    color: #123; break-inside: avoid; margin-bottom: .5mm;
+    font-family: Arial, Helvetica, sans-serif; font-size: 3.2pt; line-height: 1.35;
+    color: #123; break-inside: avoid; margin-bottom: .4mm;
   }
   .reminders li::before { content: "- "; }
 `;
@@ -152,14 +160,14 @@ async function renderCardHtml(s: BulkStudent, logoUrl: string): Promise<string> 
 
 /**
  * Builds an A4 printable sheet of the OFFICIAL LPHS QR cards
- * (2 columns x 3 rows = 6 per page) with cutting guides and print-safe margins.
+ * (3 columns x 3 rows = 9 per page) with cutting guides and print-safe margins.
  */
 export async function buildQRCardSheet(students: BulkStudent[], logoUrl: string): Promise<string> {
   const cards = await Promise.all(students.map((s) => renderCardHtml(s, logoUrl)));
 
   const pages: string[] = [];
-  for (let i = 0; i < cards.length; i += 6) {
-    pages.push(`<section class="page">${cards.slice(i, i + 6).join("")}</section>`);
+  for (let i = 0; i < cards.length; i += CARDS_PER_PAGE) {
+    pages.push(`<section class="page">${cards.slice(i, i + CARDS_PER_PAGE).join("")}</section>`);
   }
 
   return `<!doctype html><html><head><meta charset="utf-8"/>
@@ -183,9 +191,9 @@ export async function buildQRCardSheet(students: BulkStudent[], logoUrl: string)
   .toolbar button:hover { transform: translateY(-1px); filter: brightness(1.05); }
   .page {
     width: 198mm; min-height: 283mm; margin: 0 auto 6mm; padding: 0;
-    display: grid; grid-template-columns: ${CARD_WIDTH_MM}mm ${CARD_WIDTH_MM}mm;
-    grid-template-rows: repeat(3, ${CARD_HEIGHT_MM}mm);
-    justify-content: center; align-content: start; gap: 2mm 3mm;
+    display: grid; grid-template-columns: repeat(${CARDS_PER_ROW}, ${CARD_WIDTH_MM}mm);
+    grid-template-rows: repeat(${CARDS_PER_COLUMN}, ${CARD_HEIGHT_MM}mm);
+    justify-content: center; align-content: start; gap: ${CARD_GAP_Y_MM}mm ${CARD_GAP_X_MM}mm;
     background: #fff; page-break-after: always; break-after: page;
   }
   .page:last-child { page-break-after: auto; break-after: auto; }
@@ -201,7 +209,7 @@ export async function buildQRCardSheet(students: BulkStudent[], logoUrl: string)
 <body>
 <div class="toolbar no-print">
   <strong>LPHS QR Cards</strong>
-  <span>${students.length} card${students.length === 1 ? "" : "s"} \u00b7 A4 \u00b7 6 per page \u00b7 cutting guides</span>
+  <span>${students.length} card${students.length === 1 ? "" : "s"} \u00b7 A4 \u00b7 ${CARDS_PER_PAGE} per page \u00b7 cutting guides</span>
   <button onclick="window.print()">Print</button>
   <button class="ghost" onclick="window.close()">Close</button>
 </div>
@@ -211,7 +219,7 @@ ${pages.join("")}
 }
 
 /**
- * Exports cards as a print-ready A4 PDF (6 per page) without using the
+ * Exports cards as a print-ready A4 PDF (9 per page) without using the
  * browser print dialog. Renders the real card markup off-screen.
  */
 export async function downloadCardsPDF(
@@ -233,7 +241,7 @@ export async function downloadCardsPDF(
   document.body.appendChild(host);
 
   const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-  const marginX = (210 - CARD_WIDTH_MM * 2 - 3) / 2;
+  const marginX = (210 - CARD_WIDTH_MM * CARDS_PER_ROW - CARD_GAP_X_MM * (CARDS_PER_ROW - 1)) / 2;
   const marginY = 8;
 
   try {
@@ -249,10 +257,10 @@ export async function downloadCardsPDF(
       });
       host.removeChild(wrap);
 
-      const slot = i % 6;
+      const slot = i % CARDS_PER_PAGE;
       if (i > 0 && slot === 0) pdf.addPage();
-      const x = marginX + (slot % 2) * (CARD_WIDTH_MM + 3);
-      const y = marginY + Math.floor(slot / 2) * (CARD_HEIGHT_MM + 2);
+      const x = marginX + (slot % CARDS_PER_ROW) * (CARD_WIDTH_MM + CARD_GAP_X_MM);
+      const y = marginY + Math.floor(slot / CARDS_PER_ROW) * (CARD_HEIGHT_MM + CARD_GAP_Y_MM);
       pdf.addImage(
         canvas.toDataURL("image/jpeg", 0.95),
         "JPEG",

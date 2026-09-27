@@ -722,7 +722,7 @@ function BulkGenerator() {
           </button>
         </div>
         <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-primary-foreground/45">
-          A4 · 6 cards per page · cutting guides included
+          A4 · 9 cards per page (62mm × 92mm) · cutting guides included
         </p>
       </section>
 
